@@ -1,4 +1,4 @@
-# Credits By github.com/ZheHacK
+# Credits By gettoVDS
 $i = 99999
 do {
     Write-Host $i
