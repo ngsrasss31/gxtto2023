@@ -1,26 +1,36 @@
-# Credits By gettoVDS
+name: Remote Desktop Setup
 
-name: Cl by getto
+on:
+  push:
+    branches:
+      - main
 
-on: 
-  workflow_dispatch:
-    inputs:
-      authcode:
-        description: 'CRD Kodunuzu Giriniz'
-        required: true
-      pincode:
-        description: '6 Haneli Pin Kodunuz'
-        required: true
-  
 jobs:
-  build:
-    runs-on: windows-latest
+  setup-remote-desktop:
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Kurulum Başlatılıyor
-      run: ./main.ps1
-    - name: CRD Başlatılıyor
-      run: ${{ github.event.inputs.authcode }} -pin=${{ github.event.inputs.pincode }}
-    - name: Aktif Tut
-      run: ./timeout.ps1
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up SSH
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y openssh-server
+        sudo systemctl start ssh
+        sudo systemctl enable ssh
+
+    - name: Install Chrome Remote Desktop
+      run: |
+        wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+        sudo dpkg -i chrome-remote-desktop_current_amd64.deb || sudo apt-get -f install -y
+
+    - name: Configure Chrome Remote Desktop
+      run: |
+        # Replace with your own authentication token and email
+        AUTH_TOKEN="your_auth_token"
+        EMAIL="your_email@example.com"
+        DISPLAY_NAME="Remote Desktop"
+           
+        # Authenticate and set up the remote desktop
+        echo $AUTH_TOKEN | sudo chrome-remote-desktop --setup --user=$EMAIL --display-name=$DISPLAY_NAME
