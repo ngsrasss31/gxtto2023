@@ -1,4 +1,13 @@
-# Credits By gettoVDS
-Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
-& {$P = $env:TEMP + '\chromeremotedesktophost.msi'; Invoke-WebRequest 'https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi' -OutFile $P; Start-Process $P -Wait; Remove-Item $P}
-& {$P = $env:TEMP + '\chrome_installer.exe'; Invoke-WebRequest 'https://dl.google.com/chrome/install/latest/chrome_installer.exe' -OutFile $P; Start-Process -FilePath $P -Args '/install' -Verb RunAs -Wait; Remove-Item $P}
+# PowerShell script to establish SSH connection
+$remoteHost = "remote_host_ip"
+$username = "your_username"
+$password = "your_password"
+
+# Create a new SSH session
+$session = New-SSHSession -ComputerName $remoteHost -Credential (New-Object System.Management.Automation.PSCredential($username, (ConvertTo-SecureString $password -AsPlainText -Force)))
+
+# Execute a command on the remote machine
+Invoke-SSHCommand -SessionId $session.SessionId -Command "echo 'Connected to remote machine'"
+
+# Close the session
+Remove-SSHSession -SessionId $session.SessionId
