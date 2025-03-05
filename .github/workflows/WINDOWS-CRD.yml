@@ -28,8 +28,8 @@ jobs:
     - name: Configure Chrome Remote Desktop
       run: |
         # Replace with your own authentication token and email
-        AUTH_TOKEN="your_auth_token"
-        EMAIL="your_email@example.com"
+        AUTH_TOKEN="& "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe" --code="4/0AQSTgQFrL_ugbp5Tji6ZsVugqY2WfehhNmt_kfbtLy6EZq89LDWM3FGFRYRAPcrjYJcZHA" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$Env:COMPUTERNAME"
+        EMAIL="burakabdacr@gmail.com"
         DISPLAY_NAME="Remote Desktop"
            
         # Authenticate and set up the remote desktop
