@@ -1,36 +1,31 @@
-name: Remote Desktop Setup
+name: Windows VDS Oluştur ve Test Et
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      vds_boyutu:
+        description: 'VDS Boyutu (örn: t2.medium)'
+        required: true
+        default: 't2.medium'
 
 jobs:
-  setup-remote-desktop:
+  create-vds:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Kodları çek
+        uses: actions/checkout@v3
 
-    - name: Set up SSH
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y openssh-server
-        sudo systemctl start ssh
-        sudo systemctl enable ssh
+      - name: Rastgele Şifre Oluştur
+        id: pwgen
+        run: echo "password=Pass$(openssl rand -hex 6)" >> $GITHUB_OUTPUT
 
-    - name: Install Chrome Remote Desktop
-      run: |
-        wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
-        sudo dpkg -i chrome-remote-desktop_current_amd64.deb || sudo apt-get -f install -y
+      - name: AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-    - name: Configure Chrome Remote Desktop
-      run: |
-        # Replace with your own authentication token and email
-        AUTH_TOKEN="& "${Env:PROGRAMFILES(X86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe" --code="4/0AQSTgQFrL_ugbp5Tji6ZsVugqY2WfehhNmt_kfbtLy6EZq89LDWM3FGFRYRAPcrjYJcZHA" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$Env:COMPUTERNAME"
-        EMAIL="burakabdacr@gmail.com"
-        DISPLAY_NAME="Remote Desktop"
-           
-        # Authenticate and set up the remote desktop
-        echo $AUTH_TOKEN | sudo chrome-remote-desktop --setup --user=$EMAIL --display-name=$DISPLAY_NAME
+      - name: VDS Oluştur ve Yapılandır
+        run: pwsh ./scripts/create-vds.ps1 -InstanceType "${{ github.event.inputs.vds_boyutu }}" -Password "${{ steps.pwgen.outputs.password }}"
