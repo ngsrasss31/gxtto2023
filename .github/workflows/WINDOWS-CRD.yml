@@ -1,31 +1,40 @@
-name: Windows VDS Oluştur ve Test Et
+name: Windows VDS Oluşturma (Free Tier)
 
 on:
   workflow_dispatch:
-    inputs:
-      vds_boyutu:
-        description: 'VDS Boyutu (örn: t2.medium)'
-        required: true
-        default: 't2.medium'
 
 jobs:
-  create-vds:
+  vds-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
 
     steps:
-      - name: Kodları çek
-        uses: actions/checkout@v3
+    - name: Repo'yu Klonla
+      uses: actions/checkout@v3
 
-      - name: Rastgele Şifre Oluştur
-        id: pwgen
-        run: echo "password=Pass$(openssl rand -hex 6)" >> $GITHUB_OUTPUT
+    - name: AWS Kimlik Bilgilerini Ayarla
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-      - name: AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+    - name: Rastgele Şifre Oluştur
+      id: pwgen
+      run: |
+        $pass = [System.Web.Security.Membership]::GeneratePassword(20,3)
+        echo "password=$pass" >> $env:GITHUB_OUTPUT
 
-      - name: VDS Oluştur ve Yapılandır
-        run: pwsh ./scripts/create-vds.ps1 -InstanceType "${{ github.event.inputs.vds_boyutu }}" -Password "${{ steps.pwgen.outputs.password }}"
+    - name: EC2 Oluştur (t2.micro - Ücretsiz)
+      run: ./scripts/create-vds.ps1 -InstanceType "t2.micro" -Password "${{ steps.pwgen.outputs.password }}"
+
+    - name: 2 dakika bekle (Yapılandırma ve RDP açılması için)
+      run: Start-Sleep -Seconds 120
+
+    - name: Selenium Testlerini Çalıştır
+      run: echo "Buraya test scriptini bağlayabilirsiniz veya SSH ile VDS'e bağlanıp tetikleyebilirsiniz."
+
+    - name: EC2'yi Sil
+      run: ./scripts/terminate-vds.ps1
